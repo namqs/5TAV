@@ -1,0 +1,50 @@
+def exibir_tabuleiro(tabuleiro):
+    print("    A   B   C")
+    print(f"1   {tabuleiro['A1'].center(1)} | {tabuleiro['B1'].center(1)} | {tabuleiro['C1'].center(1)}")
+    print("   ---|---|---")
+    print(f"2   {tabuleiro['A2'].center(1)} | {tabuleiro['B2'].center(1)} | {tabuleiro['C2'].center(1)}")
+    print("   ---|---|---")
+    print(f"3   {tabuleiro['A3'].center(1)} | {tabuleiro['B3'].center(1)} | {tabuleiro['C3'].center(1)}")
+
+def verificar_vencedor(tabuleiro, simbolo):
+    combinacoes_vencedoras = [
+        ['A1', 'A2', 'A3'], ['B1', 'B2', 'B3'], ['C1', 'C2', 'C3'], #linhas
+        ['A1', 'B1', 'C1'], ['A2', 'B2', 'C2'], ['A3', 'B3', 'C3'], #colunas
+        ['A1', 'B2', 'C3'], ['A3', 'B2', 'C1']  #diagonais
+    ]
+    for combinacao in combinacoes_vencedoras:
+        if all(tabuleiro[posicao] == simbolo for posicao in combinacao):
+            return True
+    return False
+
+def jogo_da_velha():
+    tabuleiro = {f"{linha}{coluna}": " " for linha in "ABC" for coluna in "123"}
+    exibir_tabuleiro(tabuleiro)
+
+    simbolo1 = input("Quem começará? (X ou O): ").upper()
+    simbolo2 = 'O' if simbolo1 == 'X' else 'X'
+
+    jogadas = 0
+    simbolo_atual = simbolo1
+
+    while jogadas < 9:
+        posicao = input(f"Jogador {simbolo_atual}, escolha uma posição (A1-C3): ").upper()
+
+        while posicao not in tabuleiro or tabuleiro[posicao] != " ":
+            print("Posição inválida ou ocupada! Tente novamente.")
+            posicao = input(f"Jogador {simbolo_atual}, escolha uma posição (A1-C3): ").upper()
+
+        tabuleiro[posicao] = simbolo_atual
+        exibir_tabuleiro(tabuleiro)
+        jogadas += 1
+
+        if verificar_vencedor(tabuleiro, simbolo_atual):
+            print(f"O símbolo {simbolo_atual} ganhou!")
+            break
+
+        simbolo_atual = simbolo2 if simbolo_atual == simbolo1 else simbolo1
+
+    if jogadas == 9 and not verificar_vencedor(tabuleiro, simbolo1) and not verificar_vencedor(tabuleiro, simbolo2):
+        print("O jogo terminou em empate!")
+
+jogo_da_velha()
