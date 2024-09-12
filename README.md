@@ -1,6 +1,6 @@
 <h1>Repositório dedicados às atividades da disciplina de Tópicos Avançados: Inteligência Artificial</h1>
 
-<h4>1°)Primeira Atividade</h4>
+<h4><a href=" https://github.com/namqs/5TAV/blob/main/jogo_da_velha_p_vs_p">1°) Primeira Atividade</a></h4>
 <p>Desenvolver um jogo da velha player vs player.</p>
 <p>Link: https://github.com/namqs/5TAV/blob/main/jogo_da_velha_p_vs_p</p>
 
