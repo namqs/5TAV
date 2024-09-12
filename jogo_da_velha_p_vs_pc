@@ -1,0 +1,65 @@
+import random
+
+def exibir_tabuleiro(tabuleiro):
+    print("    A   B   C")
+    print(f"1   {tabuleiro['A1'].center(1)} | {tabuleiro['B1'].center(1)} | {tabuleiro['C1'].center(1)}")
+    print("   ---|---|---")
+    print(f"2   {tabuleiro['A2'].center(1)} | {tabuleiro['B2'].center(1)} | {tabuleiro['C2'].center(1)}")
+    print("   ---|---|---")
+    print(f"3   {tabuleiro['A3'].center(1)} | {tabuleiro['B3'].center(1)} | {tabuleiro['C3'].center(1)}")
+
+def verificar_vencedor(tabuleiro, simbolo):
+    combinacoes_vencedoras = [
+        ['A1', 'A2', 'A3'], ['B1', 'B2', 'B3'], ['C1', 'C2', 'C3'], 
+        ['A1', 'B1', 'C1'], ['A2', 'B2', 'C2'], ['A3', 'B3', 'C3'], 
+        ['A1', 'B2', 'C3'], ['A3', 'B2', 'C1'] 
+    ]
+    for combinacao in combinacoes_vencedoras:
+        if all(tabuleiro[posicao] == simbolo for posicao in combinacao):
+            return True
+    return False
+
+def jogada_computador(tabuleiro):
+    # Obtém todas as posições vazias
+    posicoes_vazias = [posicao for posicao in tabuleiro if tabuleiro[posicao] == " "]
+    # Escolhe uma posição aleatória dentre as posições vazias
+    return random.choice(posicoes_vazias)
+
+def jogo_da_velha():
+    tabuleiro = {f"{linha}{coluna}": " " for linha in "ABC" for coluna in "123"}
+    exibir_tabuleiro(tabuleiro)
+
+    simbolo_jogador = input("Escolha seu símbolo (X ou O): ").upper()
+    simbolo_computador = 'O' if simbolo_jogador == 'X' else 'X'
+
+    jogadas = 0
+    simbolo_atual = simbolo_jogador
+
+    while jogadas < 9:
+        if simbolo_atual == simbolo_jogador:
+            #player
+            posicao = input(f"Jogador {simbolo_atual}, escolha uma posição (A1-C3): ").upper()
+
+            while posicao not in tabuleiro or tabuleiro[posicao] != " ":
+                print("Posição inválida ou ocupada! Tente novamente.")
+                posicao = input(f"Jogador {simbolo_atual}, escolha uma posição (A1-C3): ").upper()
+
+        else:
+            #pc
+            posicao = jogada_computador(tabuleiro)
+            print(f"Computador escolheu a posição: {posicao}")
+
+        tabuleiro[posicao] = simbolo_atual
+        exibir_tabuleiro(tabuleiro)
+        jogadas += 1
+
+        if verificar_vencedor(tabuleiro, simbolo_atual):
+            print(f"O símbolo {simbolo_atual} ganhou!")
+            break
+
+        simbolo_atual = simbolo_computador if simbolo_atual == simbolo_jogador else simbolo_jogador
+
+    if jogadas == 9 and not verificar_vencedor(tabuleiro, simbolo_jogador) and not verificar_vencedor(tabuleiro, simbolo_computador):
+        print("O jogo terminou em empate!")
+
+jogo_da_velha()
