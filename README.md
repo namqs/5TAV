@@ -1,4 +1,4 @@
-<h1>Repositório dedicados às atividades da disciplina de Tópicos Avançados: Inteligência Artificial</h1>
+<h1>Repositório da disciplina de Tópicos Avançados: Inteligência Artificial</h1>
 
 <h4>1°) Primeira Atividade</h4>
 <p>Desenvolver um jogo da velha player vs player.</p>
