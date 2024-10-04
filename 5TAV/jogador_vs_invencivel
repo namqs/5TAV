@@ -1,0 +1,72 @@
+from tabuleiro import mostrar_tabuleiro, inicializar_tabuleiro, jogada_valida, fazer_jogada, verificar_vencedor
+
+def melhor_jogada_computador(tabuleiro):
+    # Prioridade 1: Verificar se o computador pode vencer
+    for i in range(1, 10):
+        if jogada_valida(tabuleiro, i):
+            tabuleiro[i] = -1  # Simula uma jogada do computador (O)
+            if verificar_vencedor(tabuleiro) == 'O':
+                return i
+            tabuleiro[i] = 0  # Desfaz a jogada
+
+    #2° vê se o outro pode vencer, se sim, bloqueia
+    for i in range(1, 10):
+        if jogada_valida(tabuleiro, i):
+            tabuleiro[i] = 1 #simula o x
+            if verificar_vencedor(tabuleiro) == 'X':
+                return i
+            tabuleiro[i] = 0 
+
+    #3° jogar no centro
+    if jogada_valida(tabuleiro, 5):
+        return 5
+
+    #4° jogar nos cantos
+    for i in [1, 3, 7, 9]:
+        if jogada_valida(tabuleiro, i):
+            return i
+
+    #5° jogar em local livre
+    for i in range(1, 10):
+        if jogada_valida(tabuleiro, i):
+            return i
+
+# Função principal do jogo
+def jogo_jogador_vs_computador_invencivel():
+    tabuleiro = inicializar_tabuleiro()
+    jogadores = ['X', 'O']  # 'X' é o humano, 'O' é o computador
+    turno = 0
+
+    while tabuleiro[0] < 9: 
+        mostrar_tabuleiro(tabuleiro)
+        jogador_atual = jogadores[turno % 2]
+        print(f"Turno do jogador {jogador_atual}")
+
+        if jogador_atual == 'X': 
+            try:
+                posicao = int(input(f"Escolha uma posição de 1 a 9 para jogar: "))
+                if posicao < 1 or posicao > 9 or not jogada_valida(tabuleiro, posicao):
+                    print("Posição inválida. Tente novamente.")
+                    continue
+            except ValueError:
+                print("Entrada inválida. Tente novamente.")
+                continue
+        else:  
+            posicao = melhor_jogada_computador(tabuleiro)
+            print(f"O computador jogou na posição {posicao}.")
+
+        fazer_jogada(tabuleiro, jogador_atual, posicao)
+        vencedor = verificar_vencedor(tabuleiro)
+
+        if vencedor:
+            mostrar_tabuleiro(tabuleiro)
+            print(f"Jogador {vencedor} venceu!")
+            return
+
+        turno += 1
+
+    print("Fim do jogo! Empate.")
+    mostrar_tabuleiro(tabuleiro)
+
+if __name__ == '__main__':
+    jogo_jogador_vs_computador_invencivel()
