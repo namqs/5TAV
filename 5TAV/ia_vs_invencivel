@@ -1,0 +1,247 @@
+import random
+import matplotlib.pyplot as plt
+
+# Função para mostrar o tabuleiro
+def mostrar_tabuleiro(tabuleiro):
+    def simbolo(pos):
+        if tabuleiro[pos] == 1:
+            return 'X'
+        elif tabuleiro[pos] == -1:
+            return 'O'
+        else:
+            return str(pos)
+
+    print(f"{simbolo(1)} | {simbolo(2)} | {simbolo(3)}")
+    print("--+---+--")
+    print(f"{simbolo(4)} | {simbolo(5)} | {simbolo(6)}")
+    print("--+---+--")
+    print(f"{simbolo(7)} | {simbolo(8)} | {simbolo(9)}")
+
+# Inicializa o tabuleiro
+def inicializar_tabuleiro():
+    return [0] * 10  # array com 10 posições
+
+# Verifica se a jogada é válida
+def jogada_valida(tabuleiro, posicao):
+    return tabuleiro[posicao] == 0
+
+# Faz a jogada no tabuleiro
+def fazer_jogada(tabuleiro, jogador, posicao):
+    if jogador == 'X':
+        tabuleiro[posicao] = 1
+    elif jogador == 'O':
+        tabuleiro[posicao] = -1
+    tabuleiro[0] += 1  # contador de jogadas
+
+# Verifica se há um vencedor
+def verificar_vencedor(tabuleiro):
+    combinacoes_vencedoras = [
+        [1, 2, 3], [4, 5, 6], [7, 8, 9], [1, 4, 7], [2, 5, 8], [3, 6, 9], [1, 5, 9], [3, 5, 7]
+    ]
+
+    for combinacao in combinacoes_vencedoras:
+        soma = tabuleiro[combinacao[0]] + tabuleiro[combinacao[1]] + tabuleiro[combinacao[2]]
+        if soma == 3:
+            return 'X'
+        elif soma == -3:
+            return 'O'
+    return None
+
+# Jogada usando algoritmo para não perder
+def melhor_jogada_computador(tabuleiro):
+    # 1. Verificar se o computador pode vencer
+    for i in range(1, 10):
+        if jogada_valida(tabuleiro, i):
+            tabuleiro[i] = -1  # Simula uma jogada do computador (O)
+            if verificar_vencedor(tabuleiro) == 'O':
+                return i
+            tabuleiro[i] = 0  # Desfaz a jogada
+
+    # 2. Vê se o outro pode vencer, se sim, bloqueia
+    for i in range(1, 10):
+        if jogada_valida(tabuleiro, i):
+            tabuleiro[i] = 1  # Simula o X
+            if verificar_vencedor(tabuleiro) == 'X':
+                return i
+            tabuleiro[i] = 0  # Desfaz a jogada
+
+    # 3. Jogar no centro
+    if jogada_valida(tabuleiro, 5):
+        return 5
+
+    # 4. Jogar nos cantos
+    for i in [1, 3, 7, 9]:
+        if jogada_valida(tabuleiro, i):
+            return i
+
+    # 5. Jogar em local livre
+    for i in range(1, 10):
+        if jogada_valida(tabuleiro, i):
+            return i
+
+# Jogada automática aleatória
+def jogar_automatico(tabuleiro):
+    posicoes_disponiveis = [i for i in range(1, 10) if jogada_valida(tabuleiro, i)]
+    return random.choice(posicoes_disponiveis)
+
+# Função para a IA jogar usando o aprendizado
+def jogar_com_ia(tabuleiro, aprendizado, epsilon=0.1):
+    estado = tuple(tabuleiro)
+    
+    # Epsilon-greedy: Exploração ou Exploração
+    if random.uniform(0, 1) < epsilon:  # Explorar novas jogadas
+        return jogar_automatico(tabuleiro)  # Jogada aleatória
+    
+    # Se o estado já foi aprendido, use a melhor jogada conhecida
+    if estado in aprendizado and any(aprendizado[estado].values()):
+        return max(aprendizado[estado], key=aprendizado[estado].get)
+    
+    # Caso contrário, jogue aleatoriamente
+    return jogar_automatico(tabuleiro)
+
+
+
+# Atualiza o aprendizado com base no histórico de jogadas e o resultado final
+def atualizar_aprendizado(aprendizado, historico_jogadas, vencedor, fator_desconto=0.9):
+    if vencedor == 'O':  # Vitória da IA
+        recompensa_final = 10
+    elif vencedor == 'X':  # Vitória do aleatório
+        recompensa_final = -10
+    else:  # Empate
+        recompensa_final = 0
+    
+    # Propaga a recompensa final para todas as jogadas anteriores
+    for idx, (tabuleiro_antes, jogador, posicao, tabuleiro_depois) in enumerate(reversed(historico_jogadas)):
+        if jogador == 'O':  # Só atualizamos as jogadas da IA
+            recompensa = recompensa_final * (fator_desconto ** idx)  # Aplica o desconto
+
+            estado = tuple(tabuleiro_antes)
+            
+            if estado not in aprendizado:
+                aprendizado[estado] = {}
+            if posicao not in aprendizado[estado]:
+                aprendizado[estado][posicao] = 0
+            
+            aprendizado[estado][posicao] += recompensa
+
+# Função para calcular o potencial de vitória de cada jogador
+def calcular_potenciais(tabuleiro):
+    combinacoes_vencedoras = [
+        [1, 2, 3], [4, 5, 6], [7, 8, 9], [1, 4, 7], [2, 5, 8], [3, 6, 9], [1, 5, 9], [3, 5, 7]
+    ]
+    potencial_ia = 0
+    potencial_aleatorio = 0
+    
+    for combinacao in combinacoes_vencedoras:
+        soma = tabuleiro[combinacao[0]] + tabuleiro[combinacao[1]] + tabuleiro[combinacao[2]]
+        if soma == -2:
+            potencial_ia += 1
+        elif soma == 2:
+            potencial_aleatorio += 1
+            
+    return potencial_ia, potencial_aleatorio
+
+# Salva jogada, estados do tabuleiro e métricas em um arquivo txt
+def salvar_jogada_completa(historico_jogadas, vencedor, arquivo):
+    with open(arquivo, 'a') as f:
+        for idx, (tabuleiro_antes, jogador, posicao, tabuleiro_depois) in enumerate(historico_jogadas):
+            f.write(f"Jogada {idx + 1}: Jogador {jogador} marcou na posição {posicao}\n")
+            f.write(f"Tabuleiro antes da jogada: {tabuleiro_antes}\n")
+            f.write(f"Tabuleiro após a jogada: {tabuleiro_depois}\n")
+            turno = tabuleiro_depois[0]
+            potenciais = calcular_potenciais(tabuleiro_depois)
+            f.write(f"Potencial de vitória IA: {potenciais[0]}, Potencial de vitória X: {potenciais[1]}\n")
+            f.write(f"Turno: {turno}\n\n")
+        f.write(f"Resultado final: {vencedor} venceu\n\n")
+
+# Função para rodar o jogo entre IA e jogador que não perde
+def jogo_ia_vs_computador(aprendizado, arquivo):
+    tabuleiro = inicializar_tabuleiro()
+    jogadores = ['X', 'O'] 
+    turno = 0
+    historico_jogadas = []
+
+    while tabuleiro[0] < 9:
+        jogador_atual = jogadores[turno % 2]
+        
+        tabuleiro_antes = tabuleiro.copy()  # Estado antes da jogada
+        
+        if jogador_atual == 'O':
+            posicao = jogar_com_ia(tabuleiro, aprendizado)  # Jogada da IA
+        else:
+            posicao = melhor_jogada_computador(tabuleiro)  # Jogada do jogador que não perde
+
+        fazer_jogada(tabuleiro, jogador_atual, posicao)
+
+        tabuleiro_depois = tabuleiro.copy()  # Estado depois da jogada
+        
+        historico_jogadas.append((tabuleiro_antes, jogador_atual, posicao, tabuleiro_depois))
+
+        vencedor = verificar_vencedor(tabuleiro)
+
+        if vencedor:
+            salvar_jogada_completa(historico_jogadas, vencedor, arquivo)  # Salva jogadas completas
+            atualizar_aprendizado(aprendizado, historico_jogadas, vencedor)  # Atualiza o aprendizado
+            return vencedor, historico_jogadas
+
+        turno += 1
+
+    salvar_jogada_completa(historico_jogadas, 'Empate', arquivo)
+    atualizar_aprendizado(aprendizado, historico_jogadas, 'Empate')
+    return 'Empate', historico_jogadas
+
+# Gera um gráfico e salva como arquivo PNG
+def gerar_grafico(num_jogos, vitorias_ia, vitorias_computador, empates):
+    jogos = list(range(1, num_jogos + 1))
+
+    plt.plot(jogos, vitorias_ia, label="Vitórias IA", color='blue', marker='o')
+    plt.plot(jogos, vitorias_computador, label="Vitórias Jogador", color='red', marker='o')
+    plt.plot(jogos, empates, label="Empates", color='green', marker='o')
+
+    plt.xlabel("Número de Jogos")
+    plt.ylabel("Vitórias/Empates")
+    plt.title("Resultados ao Longo dos Jogos")
+    plt.legend()
+
+    plt.savefig('resultados_ia_vs_computador.png')
+    plt.close()
+
+# Função para simular vários jogos e gerar estatísticas
+def simular_varios_jogos(num_jogos, arquivo_jogadas):
+    aprendizado = {}
+    vitorias_ia = 0
+    vitorias_computador = 0
+    empates = 0
+
+    historico_vitorias_ia = []
+    historico_vitorias_computador = []
+    historico_empates = []
+
+    for i in range(1, num_jogos + 1):
+        vencedor, _ = jogo_ia_vs_computador(aprendizado, arquivo_jogadas)
+        if vencedor == 'O':
+            vitorias_ia += 1
+        elif vencedor == 'X':
+            vitorias_computador += 1
+        else:
+            empates += 1
+
+        historico_vitorias_ia.append(vitorias_ia)
+        historico_vitorias_computador.append(vitorias_computador)
+        historico_empates.append(empates)
+
+    gerar_grafico(num_jogos, historico_vitorias_ia, historico_vitorias_computador, historico_empates)
+
+    print(f"Jogos simulados: {num_jogos}")
+    print(f"Vitórias da IA (O): {vitorias_ia}")
+    print(f"Vitórias do jogador (X): {vitorias_computador}")
+    print(f"Empates: {empates}")
+    
+    acuracia_ia = (vitorias_ia / num_jogos) * 100
+    print(f"Acurácia da IA: {acuracia_ia:.2f}%")
+
+if __name__ == '__main__':
+    numero_de_jogos = int(input("Quantos jogos você deseja simular? "))
+    arquivo_jogadas = 'historico_jogadas_completo.txt'
+    simular_varios_jogos(numero_de_jogos, arquivo_jogadas)
+
